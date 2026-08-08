@@ -1,13 +1,21 @@
 package main
 
 import (
+	"image/color"
 	"os"
 	"fmt"
 	tea "charm.land/bubbletea/v2"
+	"github.com/lucasb-eyer/go-colorful"
+	"github.com/charmbracelet/x/ansi"
+	"github.com/charmbracelet/colorprofile"
 )
 
+var myFancyColor color.Color;
+
 func main() {
-    p := tea.NewProgram(initialModel())
+	myFancyColor, _ = colorful.Hex("#eb4034")
+
+	p := tea.NewProgram(model{}, tea.WithColorProfile(colorprofile.TrueColor))
     if _, err := p.Run(); err != nil {
         fmt.Printf("Alas, there's been an error: %v", err)
         os.Exit(1)
@@ -45,5 +53,5 @@ func (m model) View() tea.View {
 					|  A  |
 					|     |
 					\-----/`
-    return tea.NewView(s)
+    return tea.NewView(ansi.Style{}.ForegroundColor(myFancyColor).Styled(s))
 }
