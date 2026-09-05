@@ -1,13 +1,17 @@
 package main
 
 import (
-	"image/color"
-	"os"
 	"fmt"
+	"image/color"
+	"log"
+	"os"
+	"errors"
+	"slices"
+
 	tea "charm.land/bubbletea/v2"
-	"github.com/lucasb-eyer/go-colorful"
-	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/colorprofile"
+	"github.com/charmbracelet/x/ansi"
+	"github.com/lucasb-eyer/go-colorful"
 )
 
 var myFancyColor color.Color;
@@ -47,11 +51,45 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     return m, nil
 }
 
+func get_card_string(card_type string) (string, error) {
+	allowed_card_types := []string{"A", "K", "Q", "J", "X", "XI", "VIII", "VII"}
+	if !slices.Contains(allowed_card_types, card_type) {
+		return "", errors.New("An invalid card type is specified for card string")
+	}
+
+	top_named_line := ""
+	bottom_named_line := ""
+	switch card_type {
+	case "XI":
+		top_named_line = "|%s    |\n"
+		bottom_named_line = "|    %s|\n"
+	case "VIII":
+		top_named_line = "|%s  |\n"
+		bottom_named_line = "|  %s|\n"
+	case "VII":
+		top_named_line = "|%s   |\n"
+		bottom_named_line = "|   %s|\n"
+	default:
+		top_named_line = "| %s    |\n"
+		bottom_named_line = "|    %s |\n"
+	}
+
+	s := fmt.Sprintf(
+		"/------\\\n" +
+		top_named_line +
+		"|      |\n" +
+		"|      |\n" +
+		bottom_named_line +
+	 "\\------/\n", card_type, card_type)
+
+	return s, nil;
+}
+
 func (m model) View() tea.View {
-    s := `/-----\
-					|     |
-					|  A  |
-					|     |
-					\-----/`
-    return tea.NewView(ansi.Style{}.ForegroundColor(myFancyColor).Styled(s))
+		card_s, err := get_card_string("VII")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+    return tea.NewView(ansi.Style{}.ForegroundColor(myFancyColor).Styled(card_s))
 }
