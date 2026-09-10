@@ -2,24 +2,20 @@ package main
 
 import (
 	"fmt"
-	"image/color"
 	"log"
 	"os"
 	"errors"
 	"slices"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/charmbracelet/colorprofile"
-	"github.com/charmbracelet/x/ansi"
-	"github.com/lucasb-eyer/go-colorful"
+	"charm.land/lipgloss/v2"
+	"github.com/charmbracelet/x/exp/charmtone"
 )
 
-var myFancyColor color.Color;
+var inputStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(charmtone.Cherry.Hex()))
 
 func main() {
-	myFancyColor, _ = colorful.Hex("#eb4034")
-
-	p := tea.NewProgram(model{}, tea.WithColorProfile(colorprofile.TrueColor))
+	p := tea.NewProgram(model{})
     if _, err := p.Run(); err != nil {
         fmt.Printf("Alas, there's been an error: %v", err)
         os.Exit(1)
@@ -90,6 +86,24 @@ func (m model) View() tea.View {
 		if err != nil {
 			log.Fatal(err)
 		}
+		card_s_2, err_2 := get_card_string("X")
+		if err_2 != nil {
+			log.Fatal(err)
+		}
 
-    return tea.NewView(ansi.Style{}.ForegroundColor(myFancyColor).Styled(card_s))
+		card_s_3, err_3 := get_card_string("A")
+		if err_3 != nil {
+			log.Fatal(err)
+		}
+		// Create some layers.
+		a := lipgloss.NewLayer(inputStyle.Render(card_s)).X(0)
+		b := lipgloss.NewLayer(inputStyle.Render(card_s_2)).X(6)
+		c := lipgloss.NewLayer(inputStyle.Render(card_s_3)).X(12)
+		layers := []*lipgloss.Layer {a, b, c}
+
+		// Composite 'em and render.
+		outter_layer := lipgloss.NewLayer(inputStyle.Width(30).String())
+		compositor := lipgloss.NewCompositor(outter_layer.AddLayers(layers...));
+		output := compositor.Render()
+    return tea.NewView(output)
 }
