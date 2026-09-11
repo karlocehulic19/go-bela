@@ -1,10 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
-	"errors"
 	"slices"
 
 	tea "charm.land/bubbletea/v2"
@@ -12,10 +13,22 @@ import (
 	"github.com/charmbracelet/x/exp/charmtone"
 )
 
+var possibleCardValues = []string{"A", "K", "Q", "J", "X", "XI", "VIII", "VII"}
+var possibleCardColors = []string{"Heart", "Spade", "Diamond", "Club"}
+
+type card struct {
+	color string
+	value string
+}
+
+type player struct {
+	cards []card
+}
+
 var inputStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(charmtone.Cherry.Hex()))
 
 func main() {
-	p := tea.NewProgram(model{})
+	p := tea.NewProgram(initialModel())
     if _, err := p.Run(); err != nil {
         fmt.Printf("Alas, there's been an error: %v", err)
         os.Exit(1)
@@ -23,10 +36,35 @@ func main() {
 }
 
 type model struct {
-    cursor   int
+	players [4]player
 }
 
-func initialModel() model { return model{}
+func initialModel() model { 
+	cards := []card{}
+	for _, color := range possibleCardColors {
+		for _, value := range possibleCardValues {
+			cards = append(cards, card{
+				color: color,
+				value: value,
+			})
+		}
+	}
+
+	for i := range cards {
+		j := rand.Intn(i + 1)
+		cards[i], cards[j] = cards[j], cards[i]
+	}
+
+	players := [4]player{}
+	for j := range 4 {
+		players[j] = player{
+			cards: cards[j * 8:(j + 1) * 8],
+		}
+	}
+
+	return model{
+		players: players,
+	}
 }
 
 func (m model) Init() tea.Cmd {
@@ -48,8 +86,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func get_card_string(card_type string) (string, error) {
-	allowed_card_types := []string{"A", "K", "Q", "J", "X", "XI", "VIII", "VII"}
-	if !slices.Contains(allowed_card_types, card_type) {
+	if !slices.Contains(possibleCardValues, card_type) {
 		return "", errors.New("An invalid card type is specified for card string")
 	}
 
